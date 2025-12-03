@@ -210,11 +210,11 @@ int main() {
 
 ## Architecture
 
-![Architecture](assets/Architecture.png)
+![Architecture](assets/Architecture.svg)
 
 ## Request → Router → Handler flowchart
 
-![Flowchart](assets/Flowchart.png)
+![Flowchart](assets/Flowchart.svg)
 
 ## License
 
