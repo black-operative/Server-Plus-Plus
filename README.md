@@ -1,6 +1,6 @@
 # Server++
 
-[![C++17](https://img.shields.io/badge/C%2B%2B-17-brightgreen.svg)](https://isocpp.org/)
+[![C++20](https://img.shields.io/badge/C%2B%2B-20-brightgreen.svg)](https://isocpp.org/)
 [![CMake](https://img.shields.io/badge/CMake-3.15%2B-blue.svg)](https://cmake.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Build](https://img.shields.io/badge/build-local-lightgrey.svg)](#)
@@ -17,13 +17,13 @@
 =================================================================================
 ```
 
-Server++ — A Minimal, demo-ready HTTP server framework written in modern C++ (C++17). Provides routing, middleware support, and a small `.env` config reader. Great for demos showing a C++ REST backend without heavy dependencies.
+Server++ — A Minimal, demo-ready HTTP server framework written in modern C++ (C++20). Provides routing, middleware support, and a small `.env` config reader. Great for demos showing a C++ REST backend without heavy dependencies.
 
 ---
 
 ## Quick facts
 
-- Language: **C++17**
+- Language: **C++20**
 - Build: **CMake**
 - Focus: Learning / Demo / Small local services
 - License: **MIT**
@@ -37,7 +37,7 @@ Server++ — A Minimal, demo-ready HTTP server framework written in modern C++ (
   - Path params (e.g. `/users/:id`) and simple wildcard (`/static/*`)
 - Middleware support (pre-route hooks that can short-circuit)
 - Simple `http_request` / `http_response` types
-- Blocking single-threaded TCP server (easy to understand/extend)
+- Concurrent multi-threaded TCP server using a C++20 `std::jthread` pool (configurable worker count)
 - `.env` value reader (`getValue`) for small config
 - Small surface area — easy to wire into DAOs and business logic
 
@@ -45,7 +45,7 @@ Server++ — A Minimal, demo-ready HTTP server framework written in modern C++ (
 
 ## Badges & Quick Links
 
-- C++17, CMake build
+- C++20, CMake build
 - Local build tested on Linux/macOS/Windows (WSL)
 - Example endpoints included in `src/main.cpp`
 
@@ -53,7 +53,8 @@ Server++ — A Minimal, demo-ready HTTP server framework written in modern C++ (
 
 ## Files of interest
 
-- `include/net/server.hpp` + `src/net/server.cpp` — single-file TCP server
+- `include/net/server.hpp` + `src/net/server.cpp` — TCP server + accept loop
+- `include/thread/thread_pool.hpp` + `src/thread/thread_pool.cpp` - C++20 jthread worker pool for concurrent client handling
 - `include/net/router.hpp` + `src/net/router.cpp` — router + middleware
 - `include/net/route.hpp` + `src/net/route.cpp` — route matching & params
 - `include/net/http_types.hpp` + `src/net/http_types.cpp` — request/response
@@ -69,6 +70,7 @@ Server++ — A Minimal, demo-ready HTTP server framework written in modern C++ (
 ```ini
 # .env
 PORT=4001
+THREADS=4
 ```
 
 ### Build
@@ -107,11 +109,14 @@ using json = nlohmann::json;
 
 int main() {
     // Read port from .env or use 4001
-    int port = 4001;
+    int port    = 4001;
+    int threads = 4;
     std::string p = getValue(".env", "PORT");
-    if (!p.empty()) port = std::stoi(p);
+    std::string t = getValue(".env", "THREADS");
+    if (!p.empty()) port    = std::stoi(p);
+    if (!t.empty()) threads = std::stoi(t);  
 
-    Server server(port);
+    Server server(port, threads);
     auto& r = server.get_router();
 
     // Logging middleware
@@ -180,6 +185,7 @@ int main() {
 
 ### Server
 
+- `Server::Server(int port, size_t thread_count = 4)` — initializes server and allocates worker threads
 - `Server::start()` — start accept loop, blocking
 - `Server::stop()` — stops server, closes socket
 - `Server::get_router()` — reference to Router to register routes & middleware
