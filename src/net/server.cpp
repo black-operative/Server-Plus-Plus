@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <unistd.h>
 
 #include "net/server.hpp"
@@ -127,16 +128,38 @@ void Server::accept_loop() {
         cout << "\n[SERVER] : Connection accepted : " << c_addr << endl;
 
         handle_client(client_fd);
-        close(client_fd);
     }
 }
 
 // Handle one client request
 void Server::handle_client(int client_fd) {
+    struct timeval timeout;
+    timeout.tv_sec  = 5;
+    timeout.tv_usec = 0;
+
+    if (
+        setsockopt(
+            client_fd,
+            SOL_SOCKET,
+            SO_RCVTIMEO,
+            &timeout,
+            sizeof(timeout)
+        ) < 0
+    ) {
+        cerr << "\n[SERVER] @ handle_client() : setsockopt() failed\n";
+        close(client_fd);
+        return;
+    }
+
     char buffer[BUFFER_SIZE];
     int bytes = recv(client_fd, buffer, sizeof(buffer), 0);
-    if (bytes <= 0)
+    if (bytes <= 0) {
+        if (bytes < 0) {
+            cerr << "[SERVER] @handle_client() : Client timed out or read error.\n";
+        }
+        close(client_fd);
         return;
+    }
 
     string raw(buffer, bytes);
 
@@ -150,4 +173,6 @@ void Server::handle_client(int client_fd) {
 
     string out = res.toString();
     send(client_fd, out.c_str(), out.size(), 0);
+
+    close(client_fd);
 }
