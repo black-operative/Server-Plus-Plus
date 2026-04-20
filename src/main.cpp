@@ -6,7 +6,10 @@
 using std::stoi;
 
 int main(int argc, char** argv) {
-    Server server(stoi(getValue("PORT")));
+    Server server(
+        stoi(getValue("PORT")),
+        stoi(getValue("THREADS"))
+    );
 
     auto& r = server.get_router();
 

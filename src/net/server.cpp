@@ -22,7 +22,9 @@ static void handle_sigint(int) {
 }
 
 // Constructor
-Server::Server(int port) {
+Server::Server(int port, size_t thread_count) 
+    : pool(thread_count) 
+{
     this->port      = port;
     this->running   = false;
     this->server_fd = -1;
@@ -127,7 +129,12 @@ void Server::accept_loop() {
         );
         cout << "\n[SERVER] : Connection accepted : " << c_addr << endl;
 
-        handle_client(client_fd);
+        // Package handle_client function, client_fd and push to thread pool queue
+        pool.enqueue(
+            [this, client_fd] () {
+                this->handle_client(client_fd);
+            }
+        );
     }
 }
 
