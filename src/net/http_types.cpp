@@ -5,6 +5,9 @@
 using std::to_string;
 
 void http_request::parse(const string& raw) {
+    method.clear();
+    path.clear();
+    version.clear();
     headers.clear();
     body.clear();
     
