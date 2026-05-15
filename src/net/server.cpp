@@ -13,12 +13,13 @@ using std::endl;
 using std::cout;
 using std::cerr;
 
-static Server* global_server_ptr = nullptr;
+static std::atomic<Server*> global_server_ptr = nullptr;
 
 // Ctrl+C graceful shutdown handler
 static void handle_sigint(int) {
-    if (global_server_ptr)
-        global_server_ptr->stop();
+    if (Server* server = global_server_ptr.load()) {
+        server->stop();
+    }
 }
 
 // Constructor
@@ -29,7 +30,7 @@ Server::Server(int port, size_t thread_count)
     this->running   = false;
     this->server_fd = -1;
 
-    global_server_ptr = this;
+    global_server_ptr.store(this);
 
     server_fd = socket(
         AF_INET, 
