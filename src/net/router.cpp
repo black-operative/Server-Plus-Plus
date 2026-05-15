@@ -100,12 +100,23 @@ void Router::DELETE(
 }
 
 void Router::PATCH(
-    const string& path, 
+    const string& path,
     route_handler handler
 ) {
     route(
-        "PATCH", 
-        path, 
+        "PATCH",
+        path,
+        handler
+    );
+}
+
+void Router::OPTIONS(
+    const string& path,
+    route_handler handler
+) {
+    route(
+        "OPTIONS",
+        path,
         handler
     );
 }
@@ -158,6 +169,38 @@ void Router::handle(const http_request& req, http_response& res) {
             }
         }
         
+        // Auto OPTIONS introspection: no explicit handler matched
+        if (req.method == "OPTIONS") {
+            vector<string> allowed;
+            for (const auto& r : routes) {
+                route_parameters tmp;
+                if (r.path_matches(req.path, tmp))
+                    allowed.push_back(r.method);
+            }
+            if (!allowed.empty()) {
+                allowed.push_back("OPTIONS");
+                sort(allowed.begin(), allowed.end());
+                allowed.erase(
+                    unique(
+                        allowed.begin(), 
+                        allowed.end()
+                    ), 
+                    allowed.end()
+                );
+
+                string allow_val;
+                for (size_t i = 0; i < allowed.size(); ++i) {
+                    if (i) allow_val += ", ";
+                    allow_val += allowed[i];
+                }
+                res.status_code      = 200;
+                res.status_txt       = "OK";
+                res.headers["Allow"] = allow_val;
+                res.body             = "";
+                return;
+            }
+        }
+
         // No route matched
         not_found_handler(req, res, params);
         

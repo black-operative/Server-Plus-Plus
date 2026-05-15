@@ -29,11 +29,12 @@ class Router {
     public:
         Router();
 
-        void GET   (const string& path  , route_handler handler);
-        void POST  (const string& path  , route_handler handler);
-        void PUT   (const string& path  , route_handler handler);
-        void DELETE(const string& path  , route_handler handler);
-        void PATCH (const string& path  , route_handler handler);
+        void GET    (const string& path, route_handler handler);
+        void POST   (const string& path, route_handler handler);
+        void PUT    (const string& path, route_handler handler);
+        void DELETE (const string& path, route_handler handler);
+        void PATCH  (const string& path, route_handler handler);
+        void OPTIONS(const string& path, route_handler handler);
         
         void route(
             const string& method, 
