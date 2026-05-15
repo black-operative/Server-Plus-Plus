@@ -174,7 +174,6 @@ void Server::handle_client(int client_fd) {
     req.parse(raw);
 
     http_response res;
-    res.version = "HTTP/1.1";
 
     router.handle(req, res);
 
