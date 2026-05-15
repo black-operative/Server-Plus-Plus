@@ -17,6 +17,7 @@ set(SOURCES
     src/net/route.cpp
     src/net/router.cpp
     src/net/server.cpp
+    src/thread/thread_pool.cpp
     src/util/dot_env.cpp
 )
 
