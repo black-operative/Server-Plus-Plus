@@ -159,27 +159,30 @@ void Server::handle_client(int client_fd) {
         return;
     }
 
-    char buffer[BUFFER_SIZE];
-    int bytes = recv(client_fd, buffer, sizeof(buffer), 0);
-    if (bytes <= 0) {
-        if (bytes < 0) {
-            cerr << "[SERVER] @handle_client() : Client timed out or read error.\n";
+    try {
+        char buffer[BUFFER_SIZE];
+        int bytes = recv(client_fd, buffer, sizeof(buffer), 0);
+        if (bytes <= 0) {
+            if (bytes < 0)
+                cerr << "[SERVER] @handle_client() : Client timed out or read error.\n";
+            close(client_fd);
+            return;
         }
-        close(client_fd);
-        return;
+
+        string raw(buffer, bytes);
+
+        http_request req;
+        req.parse(raw);
+
+        http_response res;
+
+        router.handle(req, res);
+
+        string out = res.toString();
+        send(client_fd, out.c_str(), out.size(), 0);
+    } catch (...) {
+        cerr << "[SERVER] @handle_client() : Unhandled exception.\n";
     }
-
-    string raw(buffer, bytes);
-
-    http_request req;
-    req.parse(raw);
-
-    http_response res;
-
-    router.handle(req, res);
-
-    string out = res.toString();
-    send(client_fd, out.c_str(), out.size(), 0);
 
     close(client_fd);
 }
