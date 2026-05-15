@@ -28,12 +28,32 @@ bool Route::match(
     route_parameters& params
 ) const {
     if (this->method != method) return false;
-    
+
     smatch matches;
     if (
         !regex_match(
-            path, 
-            matches, 
+            path,
+            matches,
+            path_pattern
+        )
+    ) return false;
+
+    for (size_t i = 0; i < param_names.size(); i++) {
+        params[param_names[i]] = matches[i + 1].str();
+    }
+
+    return true;
+}
+
+bool Route::path_matches(
+    const string& path,
+    route_parameters& params
+) const {
+    smatch matches;
+    if (
+        !regex_match(
+            path,
+            matches,
             path_pattern
         )
     ) return false;

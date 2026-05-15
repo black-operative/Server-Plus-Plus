@@ -41,4 +41,9 @@ struct Route {
         const string& path,
         route_parameters& params
     ) const;
+
+    bool path_matches(
+        const string& path,
+        route_parameters& params
+    ) const;
 };
