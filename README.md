@@ -33,7 +33,7 @@ Server++ — A Minimal, demo-ready HTTP server framework written in modern C++ (
 ## Features
 
 - Lightweight router with parameterized routes and wildcard support
-  - `GET`, `POST`, `PUT`, `PATCH`, `DELETE`
+  - `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`
   - Path params (e.g. `/users/:id`) and simple wildcard (`/static/*`)
 - Middleware support (pre-route hooks that can short-circuit)
 - Simple `http_request` / `http_response` types
@@ -69,6 +69,8 @@ Server++ — A Minimal, demo-ready HTTP server framework written in modern C++ (
 
 ```ini
 # .env
+# Creating this .env file is optional to configure the Server itself as the values listed below are default for the server
+# .env is encourage for DB and other configs
 PORT=4001
 THREADS=4
 ```
@@ -111,11 +113,17 @@ int main() {
     // Read port from .env or use 4001
     int port    = 4001;
     int threads = 4;
-    std::string p = getValue(".env", "PORT");
-    std::string t = getValue(".env", "THREADS");
-    if (!p.empty()) port    = std::stoi(p);
-    if (!t.empty()) threads = std::stoi(t);  
 
+    try {
+        auto p = getValue("PORT");
+        auto t = getValue("THREADS");
+        if (!p.empty()) port    = stoi(p);
+        if (!t.empty()) threads = stoi(t);
+    } catch (const std::exception& e) {
+        cerr << "[SERVER] : Bad config: " << e.what() << "\n";
+        return 1;
+    }
+                
     Server server(port, threads);
     auto& r = server.get_router();
 
